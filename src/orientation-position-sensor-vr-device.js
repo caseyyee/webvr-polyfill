@@ -29,6 +29,7 @@ function OrientationPositionSensorVRDevice() {
   // Subscribe to deviceorientation events.
   window.addEventListener('deviceorientation', this.onDeviceOrientationChange_.bind(this));
   window.addEventListener('orientationchange', this.onScreenOrientationChange_.bind(this));
+  window.addEventListener('resize', this.onScreenResize_.bind(this));
 
   this.deviceOrientation = null;
   this.screenOrientation = window.orientation;
@@ -45,6 +46,8 @@ function OrientationPositionSensorVRDevice() {
   this.resetTransform = new THREE.Quaternion();
 
   this.touchPanner = new TouchPanner();
+
+  this.onScreenResize_.call(this);
 }
 OrientationPositionSensorVRDevice.prototype = new PositionSensorVRDevice();
 
@@ -71,6 +74,14 @@ OrientationPositionSensorVRDevice.prototype.onScreenOrientationChange_ =
   this.screenOrientation = window.orientation;
 };
 
+OrientationPositionSensorVRDevice.prototype.onScreenResize_ =
+  function() {
+    // Firefox does not yet support orientationchange events, so we look at the MediaQueryList
+    // object to detect whether the device is in landscape or portrait orientation.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=920734
+    this.mediaOrientation = window.matchMedia('(orientation: landscape)').matches ? 90 : 0;
+};
+
 OrientationPositionSensorVRDevice.prototype.getOrientation = function() {
   if (this.deviceOrientation == null) {
     return null;
@@ -82,11 +93,19 @@ OrientationPositionSensorVRDevice.prototype.getOrientation = function() {
   var beta = THREE.Math.degToRad(this.deviceOrientation.beta);
   // Left to right (in portrait) rotation (y-axis).
   var gamma = THREE.Math.degToRad(this.deviceOrientation.gamma);
-  var orient = THREE.Math.degToRad(this.screenOrientation);
+  var orient = THREE.Math.degToRad(this.screenOrientation || 0);
 
   // Use three.js to convert to quaternion. Lifted from
   // https://github.com/richtr/threeVR/blob/master/js/DeviceOrientationController.js
-  this.deviceEuler.set(beta, alpha, -gamma, 'YXZ');
+  if (Util.isFirefoxAndroid() && this.mediaOrientation == 90) {
+    // swap axis for Firefox Android in portrait orientation.
+    // Assumes the device is rotated 90 degrees right.
+    var delta = gamma - (-Math.PI * 0.5);
+    gamma = (-Math.PI * 0.5) - delta;
+    this.deviceEuler.set(-gamma, -alpha, beta, 'YXZ');
+  } else {
+    this.deviceEuler.set(beta, alpha, -gamma, 'YXZ');
+  }
   this.tmpQuaternion.setFromEuler(this.deviceEuler);
   this.minusHalfAngle = -orient / 2;
   this.screenTransform.set(0, Math.sin(this.minusHalfAngle), 0, Math.cos(this.minusHalfAngle));
@@ -95,7 +114,7 @@ OrientationPositionSensorVRDevice.prototype.getOrientation = function() {
   // And any rotations done via touch events.
   this.finalQuaternion.multiply(this.touchPanner.getOrientation());
   this.finalQuaternion.multiply(this.tmpQuaternion);
-  this.finalQuaternion.multiply(this.screenTransform);
+  //this.finalQuaternion.multiply(this.screenTransform);
   this.finalQuaternion.multiply(this.worldTransform);
 
   return this.finalQuaternion;

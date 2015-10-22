@@ -14,13 +14,14 @@
  */
 
 var CardboardHMDVRDevice = require('./cardboard-hmd-vr-device.js');
-//var OrientationPositionSensorVRDevice = require('./orientation-position-sensor-vr-device.js');
+var OrientationPositionSensorVRDevice = require('./orientation-position-sensor-vr-device.js');
 var FusionPositionSensorVRDevice = require('./fusion-position-sensor-vr-device.js');
 var MouseKeyboardPositionSensorVRDevice = require('./mouse-keyboard-position-sensor-vr-device.js');
 // Uncomment to add positional tracking via webcam.
 //var WebcamPositionSensorVRDevice = require('./webcam-position-sensor-vr-device.js');
 var HMDVRDevice = require('./base.js').HMDVRDevice;
 var PositionSensorVRDevice = require('./base.js').PositionSensorVRDevice;
+var Util = require('./util.js');
 
 function WebVRPolyfill() {
   this.devices = [];
@@ -42,9 +43,14 @@ WebVRPolyfill.prototype.enablePolyfill = function() {
   }
 
   // Polyfill using the right position sensor.
-  if (this.isMobile()) {
+  if (this.isMobile() && !Util.isFirefoxAndroid()) {
     //this.devices.push(new OrientationPositionSensorVRDevice());
     this.devices.push(new FusionPositionSensorVRDevice());
+  } else if (Util.isFirefoxAndroid()) {
+    // Firefox Android does not work with FusionPositionSensor due to devicemotion
+    // event being too slow.   https://bugzilla.mozilla.org/show_bug.cgi?id=1217942
+    // We fallback to using to OrientationPosition instead.
+    this.devices.push(new OrientationPositionSensorVRDevice());
   } else {
     this.devices.push(new MouseKeyboardPositionSensorVRDevice());
     // Uncomment to add positional tracking via webcam.
