@@ -15,7 +15,7 @@
 var Util = window.Util || {};
 
 Util.MIN_TIMESTEP = 0.001;
-Util.MAX_TIMESTEP = 1;
+Util.MAX_TIMESTEP = 20;
 
 Util.clamp = function(value, min, max) {
   return Math.min(Math.max(min, value), max);

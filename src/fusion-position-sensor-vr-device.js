@@ -33,6 +33,7 @@ function FusionPositionSensorVRDevice() {
   window.addEventListener('devicemotion', this.onDeviceMotionChange_.bind(this));
   window.addEventListener('orientationchange', this.onScreenOrientationChange_.bind(this));
 
+  //this.filter = new ComplementaryFilter(WebVRConfig.K_FILTER || 0.98);
   this.filter = new ComplementaryFilter(WebVRConfig.K_FILTER || 0.98);
   this.posePredictor = new PosePredictor(WebVRConfig.PREDICTION_TIME_S || 0.050);
   this.touchPanner = new TouchPanner();
@@ -107,10 +108,10 @@ FusionPositionSensorVRDevice.prototype.onDeviceMotionChange_ = function(deviceMo
     return;
   }
   this.accelerometer.set(-accGravity.x, -accGravity.y, -accGravity.z);
-  this.gyroscope.set(rotRate.alpha, rotRate.beta, rotRate.gamma);
+  this.gyroscope.set(rotRate.alpha/50000, rotRate.beta/50000, rotRate.gamma/50000);
 
-  // In iOS, rotationRate is reported in degrees, so we first convert to
-  // radians.
+  // On iOS & Firefox Android, rotationRate is reported in degrees,
+  // so we first convert to radians.
   if (Util.isIOS()) {
     this.gyroscope.multiplyScalar(Math.PI / 180);
   }

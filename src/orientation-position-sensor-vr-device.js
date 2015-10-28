@@ -94,18 +94,20 @@ OrientationPositionSensorVRDevice.prototype.getOrientation = function() {
   // Left to right (in portrait) rotation (y-axis).
   var gamma = THREE.Math.degToRad(this.deviceOrientation.gamma);
   var orient = THREE.Math.degToRad(this.screenOrientation || 0);
-
+  document.getElementById('stat').innerHTML = this.deviceOrientation.alpha + '<br/>' + this.deviceOrientation.beta + '<br/>' + this.deviceOrientation.gamma
   // Use three.js to convert to quaternion. Lifted from
   // https://github.com/richtr/threeVR/blob/master/js/DeviceOrientationController.js
-  if (Util.isFirefoxAndroid() && this.mediaOrientation == 90) {
-    // swap axis for Firefox Android in portrait orientation.
-    // Assumes the device is rotated 90 degrees right.
-    var delta = gamma - (-Math.PI * 0.5);
-    gamma = (-Math.PI * 0.5) - delta;
-    this.deviceEuler.set(-gamma, -alpha, beta, 'YXZ');
-  } else {
-    this.deviceEuler.set(beta, alpha, -gamma, 'YXZ');
-  }
+  // if (Util.isFirefoxAndroid() && this.mediaOrientation == 90) {
+  //   // swap axis for Firefox Android in portrait orientation.
+  //   // Assumes the device is rotated 90 degrees right.
+  //   var delta = gamma - (-Math.PI * 0.5);
+  //   gamma = (-Math.PI * 0.5) - delta;
+  //   this.deviceEuler.set(-gamma, -alpha, beta, 'YXZ');
+  // } else {
+     this.deviceEuler.set(beta, alpha, -gamma, 'YXZ');
+  // }
+
+ 
   this.tmpQuaternion.setFromEuler(this.deviceEuler);
   this.minusHalfAngle = -orient / 2;
   this.screenTransform.set(0, Math.sin(this.minusHalfAngle), 0, Math.cos(this.minusHalfAngle));
@@ -114,7 +116,7 @@ OrientationPositionSensorVRDevice.prototype.getOrientation = function() {
   // And any rotations done via touch events.
   this.finalQuaternion.multiply(this.touchPanner.getOrientation());
   this.finalQuaternion.multiply(this.tmpQuaternion);
-  //this.finalQuaternion.multiply(this.screenTransform);
+  this.finalQuaternion.multiply(this.screenTransform);
   this.finalQuaternion.multiply(this.worldTransform);
 
   return this.finalQuaternion;

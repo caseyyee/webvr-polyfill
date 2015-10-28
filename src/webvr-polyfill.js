@@ -50,7 +50,8 @@ WebVRPolyfill.prototype.enablePolyfill = function() {
     // Firefox Android does not work with FusionPositionSensor due to devicemotion
     // event being too slow.   https://bugzilla.mozilla.org/show_bug.cgi?id=1217942
     // We fallback to using to OrientationPosition instead.
-    this.devices.push(new OrientationPositionSensorVRDevice());
+    // this.devices.push(new OrientationPositionSensorVRDevice());
+    this.devices.push(new FusionPositionSensorVRDevice());
   } else {
     this.devices.push(new MouseKeyboardPositionSensorVRDevice());
     // Uncomment to add positional tracking via webcam.
