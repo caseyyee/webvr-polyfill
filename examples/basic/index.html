@@ -165,7 +165,7 @@ document.querySelector('button#fullscreen').addEventListener('click', function()
   enterFullscreen(renderer.domElement);
 });
 document.querySelector('button#vr').addEventListener('click', function() {
-  vrDisplay.requestPresent({source: renderer.domElement});
+  vrDisplay.requestPresent([{source: renderer.domElement}]);
 });
 
 function enterFullscreen (el) {
